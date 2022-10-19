@@ -84,7 +84,7 @@ def main():
         m.weight.data = w
 
     def use_key_linear(m, key):
-        w = torch.from_numpy(sd[key+'/kernel'])
+        w = torch.from_numpy(sd[key+'/kernel']).T
         m.weight.data = w
 
     def use_key_bn(m, key):
