@@ -88,9 +88,9 @@ flags.DEFINE_integer(
 
 
 def main(argv):
-  imarray = np.random.rand(1,32,32,3)
+  imarray = np.random.rand(10,32,32,3)
   imarray_tf = tf.convert_to_tensor(imarray)
-  imarray_pt = torch.tensor(imarray).permute(0,3,1,2)
+  imarray_pt = torch.tensor(imarray).permute(0,3,1,2).float()
 
   # ==========================================
   # depth, width, sk_ratio = name_to_params(args.tf_path)
@@ -102,11 +102,11 @@ def main(argv):
   num_layers=2
   out_dim=64
   pth_path = 'r18_1x_simclrv2.pth'
-  model = get_resnet(depth, width, sk_ratio, cifar_stem=True)
-  head = get_head(channels_in, num_layers, out_dim)
+  model_pt = get_resnet(depth, width, sk_ratio, cifar_stem=True)
+  head_pt = get_head(channels_in, num_layers, out_dim)
 
-  model.load_state_dict(torch.load(pth_path)['resnet'])
-  head.load_state_dict(torch.load(pth_path)['head'])
+  model_pt.load_state_dict(torch.load(pth_path)['resnet'])
+  head_pt.load_state_dict(torch.load(pth_path)['head'])
   # torch.save({'resnet': model.state_dict(), 'head': head.state_dict()}, save_location)
   # ==========================================
 
@@ -115,8 +115,11 @@ def main(argv):
   model.load_weights('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780.index')
   # ==========================================
   tf_proj, tf_hidden = model(imarray_tf,True)
-  pt_proj, pt_hidden = model(imarray_tf,True)
   pb()
+  pt_hidden = model_pt(imarray_pt)
+  pt_proj = head_pt(pt_hidden)
+  print((np.abs(tf_hidden.numpy() - pt_hidden.numpy()) > 1e-6).sum())
+  print((np.abs(tf_proj.numpy() - pt_proj.numpy()) > 1e-6).sum())
 
 
 
