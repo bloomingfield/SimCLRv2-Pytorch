@@ -60,6 +60,7 @@ class LinearLayer(tf.keras.layers.Layer):
 
   def call(self, inputs, training):
     assert inputs.shape.ndims == 2, inputs.shape
+    # pb()
     inputs = self.dense(inputs)
     if self.use_bn:
       inputs = self.bn_relu(inputs, training=training)

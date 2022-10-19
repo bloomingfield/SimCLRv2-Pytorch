@@ -80,7 +80,6 @@ def main():
     # block_groups/j/shortcut_layers/i = net.j.blocks.0.projection.shortcut
 
     def use_key_conv(m, key):
-        pb()
         w = torch.from_numpy(sd[key+'/kernel']).permute(3, 2, 0, 1)
         m.weight.data = w
 

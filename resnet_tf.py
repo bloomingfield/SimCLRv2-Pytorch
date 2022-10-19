@@ -101,6 +101,7 @@ class BatchNormRelu(tf.keras.layers.Layer):  # pylint: disable=missing-docstring
           gamma_initializer=gamma_initializer)
 
   def call(self, inputs, training):
+    # inputs = self.bn(inputs, training=training)
     inputs = self.bn(inputs, training=training)
     if self.relu:
       inputs = tf.nn.relu(inputs)
@@ -237,6 +238,11 @@ class Conv2dFixedPadding(tf.keras.layers.Layer):  # pylint: disable=missing-docs
   def call(self, inputs, training):
     if self.fixed_padding:
       inputs = self.fixed_padding(inputs, training=training)
+    # pb()
+    # try:
+    #   self.conv2d(inputs, training=training)
+    # except:
+    #   pb()
     return self.conv2d(inputs, training=training)
 
 
@@ -727,8 +733,7 @@ class Resnet(tf.keras.layers.Layer):  # pylint: disable=missing-docstring
   def call(self, inputs, training):
     for layer in self.initial_conv_relu_max_pool:
       inputs = layer(inputs, training=training)
-      # pb()
-
+      
     for i, layer in enumerate(self.block_groups):
       if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == i:
         inputs = tf.stop_gradient(inputs)
