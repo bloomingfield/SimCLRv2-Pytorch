@@ -115,11 +115,10 @@ def main(argv):
   model.load_weights('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780.index')
   # ==========================================
   tf_proj, tf_hidden = model(imarray_tf,True)
-  pb()
   pt_hidden = model_pt(imarray_pt)
   pt_proj = head_pt(pt_hidden)
-  print((np.abs(tf_hidden.numpy() - pt_hidden.numpy()) > 1e-6).sum())
-  print((np.abs(tf_proj.numpy() - pt_proj.numpy()) > 1e-6).sum())
+  print((np.abs(tf_hidden.numpy() - pt_hidden.detach().numpy()) > 1e-6).sum())
+  print((np.abs(tf_proj.numpy() - pt_proj.detach().numpy()) > 1e-6).sum())
 
 
 
