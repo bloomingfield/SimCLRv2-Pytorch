@@ -91,7 +91,7 @@ flags.DEFINE_integer(
 # https://stackoverflow.com/questions/59400128/warningtensorflowlayer-my-model-is-casting-an-input-tensor-from-dtype-float64
 def main(argv):
   # torch.set_default_tensor_type(torch.DoubleTensor)
-  tf.keras.backend.set_floatx('float64')
+  # tf.keras.backend.set_floatx('float64')
   np.random.seed(0)
   imarray = np.random.rand(10,32,32,3)
   imarray_tf = tf.convert_to_tensor(imarray)
@@ -120,21 +120,19 @@ def main(argv):
 
   num_classes = 10
   model = model_lib.Model(num_classes)
-  # checkpoint = tf.train.Checkpoint(model=model)
-  # checkpoint.restore('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780').expect_partial()
-  # model = checkpoint.model
+  checkpoint = tf.train.Checkpoint(model=model)
+  checkpoint.restore('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780').expect_partial()
+  model = checkpoint.model
   
   tf_proj, tf_hidden = model(imarray_tf,True)
-  pb()
   weights = model.get_weights()
   weights = [tf.cast(w, tf.float64) for w in weights]
   tf.keras.backend.set_floatx('float64')
   model = model_lib.Model(num_classes)
   imarray_tf2 = tf.cast(imarray_tf, tf.float64)
   tf_proj, tf_hidden = model(imarray_tf2,True)
-  pb()
-  model.set_weights(weights)
 
+  model.set_weights(weights)
   # for m in model.submodules:
   #   if isinstance(m, BatchNormRelu):
   #     m.bn.gamma = tf.cast(m.bn.gamma, tf.float64)
