@@ -88,10 +88,13 @@ flags.DEFINE_integer(
 
 
 def main(argv):
+  # torch.set_default_tensor_type(torch.DoubleTensor)
+  np.random.seed(0)
   imarray = np.random.rand(10,32,32,3)
   imarray_tf = tf.convert_to_tensor(imarray)
-  imarray_pt = torch.tensor(imarray).permute(0,3,1,2).float()
-
+  imarray_pt = torch.tensor(imarray).permute(0,3,1,2)
+  # imarray_pt.permute(0,2,3,1)
+  # model_pt.net[0].conv1(imarray_pt).permute(0,2,3,1)
   # ==========================================
   # depth, width, sk_ratio = name_to_params(args.tf_path)
   depth = 18
@@ -107,16 +110,22 @@ def main(argv):
 
   model_pt.load_state_dict(torch.load(pth_path)['resnet'])
   head_pt.load_state_dict(torch.load(pth_path)['head'])
+  model_pt.double()
+  head_pt.double()
   # torch.save({'resnet': model.state_dict(), 'head': head.state_dict()}, save_location)
   # ==========================================
 
   num_classes = 10
   model = model_lib.Model(num_classes)
-  model.load_weights('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780.index')
+  checkpoint = tf.train.Checkpoint(
+    model=model)
+  checkpoint.restore('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780').expect_partial()
+  model = checkpoint.model
   # ==========================================
   tf_proj, tf_hidden = model(imarray_tf,True)
   pt_hidden = model_pt(imarray_pt)
   pt_proj = head_pt(pt_hidden)
+  pb()
   print((np.abs(tf_hidden.numpy() - pt_hidden.detach().numpy()) > 1e-6).sum())
   print((np.abs(tf_proj.numpy() - pt_proj.detach().numpy()) > 1e-6).sum())
 

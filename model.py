@@ -153,12 +153,12 @@ class Model(tf.keras.models.Model):
   def __call__(self, inputs, training):
     features = inputs
     
-    num_transforms = inputs.shape[3] // 3
-    num_transforms = tf.repeat(3, num_transforms)
-    # Split channels, and optionally apply extra batched augmentation.
-    features_list = tf.split(
-        features, num_or_size_splits=num_transforms, axis=-1)
-    features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
+    # num_transforms = inputs.shape[3] // 3
+    # num_transforms = tf.repeat(3, num_transforms)
+    # # Split channels, and optionally apply extra batched augmentation.
+    # features_list = tf.split(
+    #     features, num_or_size_splits=num_transforms, axis=-1)
+    # features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
 
     # # ========================================
     # tf.summary.image("example images", features[:2], step=0)

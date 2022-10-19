@@ -727,6 +727,7 @@ class Resnet(tf.keras.layers.Layer):  # pylint: disable=missing-docstring
   def call(self, inputs, training):
     for layer in self.initial_conv_relu_max_pool:
       inputs = layer(inputs, training=training)
+      # pb()
 
     for i, layer in enumerate(self.block_groups):
       if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == i:
