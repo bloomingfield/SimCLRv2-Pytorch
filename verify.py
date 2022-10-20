@@ -90,6 +90,37 @@ flags.DEFINE_integer(
 # https://stackoverflow.com/questions/47895494/how-to-convert-all-layers-of-a-pretrained-keras-model-to-a-different-dtype-from
 # https://stackoverflow.com/questions/59400128/warningtensorflowlayer-my-model-is-casting-an-input-tensor-from-dtype-float64
 def main(argv):
+  # ==========================================
+  # verify initilisation
+  num_classes = 10
+  depth = 18
+  width = 1
+  sk_ratio = 0
+
+  channels_in=512
+  num_layers=2
+  out_dim=64
+  pth_path = 'r18_1x_simclrv2.pth'
+  model_pt = get_resnet(depth, width, sk_ratio, cifar_stem=True)
+
+  np.random.seed(0)
+  imarray = np.random.rand(10,32,32,3)
+  imarray_tf = tf.convert_to_tensor(imarray)
+
+  model = model_lib.Model(num_classes)  
+  tf_proj, tf_hidden = model(imarray_tf,True)
+
+  model_pt.net[1].blocks[0].net.conv1.weight.mean()
+  model_pt.net[1].blocks[0].net.conv1.weight.max()
+  model_pt.net[1].blocks[0].net.conv1.weight.min()
+  model_pt.net[1].blocks[0].net.conv1.weight.std()
+
+  tf.math.reduce_mean(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+  tf.math.reduce_max(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+  tf.math.reduce_min(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+  tf.math.reduce_std(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+
+  # ==========================================
   # torch.set_default_tensor_type(torch.DoubleTensor)
   # tf.keras.backend.set_floatx('float64')
   np.random.seed(0)

@@ -14,6 +14,7 @@ BATCH_NORM_EPSILON = 1e-5
 # variance_scaling_initializer
 # https://docs.w3cub.com/tensorflow~python/tf/variance_scaling_initializer
 # https://github.com/tensorflow/tensorflow/blob/r1.8/tensorflow/python/ops/init_ops.py
+# https://github.com/keras-team/keras/blob/v2.10.0/keras/initializers/initializers_v2.py#L522-L672
 def variance_scaling_initializer(tensor):
     scale=1.0
     mode='fan_in'
@@ -21,7 +22,7 @@ def variance_scaling_initializer(tensor):
     with torch.no_grad():
         fan_in, fan_out = nn.init._calculate_fan_in_and_fan_out(tensor)
         scale /= max(1., fan_in)
-        stddev = math.sqrt(scale)
+        stddev = math.sqrt(scale) / 0.87962566103423978
         nn.init.trunc_normal_(tensor, 0.0, stddev, -2*stddev, 2*stddev)
         return tensor
 
