@@ -92,16 +92,32 @@ flags.DEFINE_integer(
 def main(argv):
   # ==========================================
   # verify initilisation
-  num_classes = 10
-  depth = 18
-  width = 1
-  sk_ratio = 0
+  if False:
+    num_classes = 10
+    depth = 18
+    width = 1
+    sk_ratio = 0
 
-  channels_in=512
-  num_layers=2
-  out_dim=64
-  pth_path = 'r18_1x_simclrv2.pth'
+    channels_in=512
+    num_layers=2
+    out_dim=64
+    pth_path = 'r18_1x_simclrv2.pth'
+    tf_path = '../simclr/tf2/cifar10_models/firsttry_real/ckpt-780'
+  else:
+    num_classes = 10
+    depth = 50
+    FLAGS.resnet_depth = 50
+    width = 1
+    sk_ratio = 0
+
+    channels_in=2048
+    num_layers=2
+    out_dim=64
+    pth_path = 'r50_1x_simclrv2.pth'
+    tf_path = '../simclr/tf2/cifar10_models/firsttry_real50/ckpt-1'
+
   model_pt = get_resnet(depth, width, sk_ratio, cifar_stem=True)
+  head_pt = get_head(channels_in, num_layers, out_dim)
 
   np.random.seed(0)
   imarray = np.random.rand(10,32,32,3)
@@ -110,15 +126,16 @@ def main(argv):
   model = model_lib.Model(num_classes)  
   tf_proj, tf_hidden = model(imarray_tf,True)
 
-  model_pt.net[1].blocks[0].net.conv1.weight.mean()
-  model_pt.net[1].blocks[0].net.conv1.weight.max()
-  model_pt.net[1].blocks[0].net.conv1.weight.min()
-  model_pt.net[1].blocks[0].net.conv1.weight.std()
+  if False:
+    model_pt.net[1].blocks[0].net.conv1.weight.mean()
+    model_pt.net[1].blocks[0].net.conv1.weight.max()
+    model_pt.net[1].blocks[0].net.conv1.weight.min()
+    model_pt.net[1].blocks[0].net.conv1.weight.std()
 
-  tf.math.reduce_mean(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
-  tf.math.reduce_max(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
-  tf.math.reduce_min(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
-  tf.math.reduce_std(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+    tf.math.reduce_mean(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+    tf.math.reduce_max(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+    tf.math.reduce_min(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
+    tf.math.reduce_std(model.layers[0].block_groups[0].layers[0].conv2d_bn_layers[0].conv2d.kernel)
 
   # ==========================================
   # torch.set_default_tensor_type(torch.DoubleTensor)
@@ -131,28 +148,31 @@ def main(argv):
   # model_pt.net[0].conv1(imarray_pt).permute(0,2,3,1)
   # ==========================================
   # depth, width, sk_ratio = name_to_params(args.tf_path)
-  depth = 18
-  width = 1
-  sk_ratio = 0
+  # depth = 18
+  # width = 1
+  # sk_ratio = 0
 
-  channels_in=512
-  num_layers=2
-  out_dim=64
-  pth_path = 'r18_1x_simclrv2.pth'
-  model_pt = get_resnet(depth, width, sk_ratio, cifar_stem=True)
-  head_pt = get_head(channels_in, num_layers, out_dim)
+  # channels_in=512
+  # num_layers=2
+  # out_dim=64
+  # pth_path = 'r18_1x_simclrv2.pth'
+  # model_pt = get_resnet(depth, width, sk_ratio, cifar_stem=True)
+  # head_pt = get_head(channels_in, num_layers, out_dim)
 
   model_pt.load_state_dict(torch.load(pth_path)['resnet'])
   head_pt.load_state_dict(torch.load(pth_path)['head'])
+  
   model_pt.double()
   head_pt.double()
+
+
   # torch.save({'resnet': model.state_dict(), 'head': head.state_dict()}, save_location)
   # ==========================================
 
   num_classes = 10
   model = model_lib.Model(num_classes)
   checkpoint = tf.train.Checkpoint(model=model)
-  checkpoint.restore('../simclr/tf2/cifar10_models/firsttry_real/ckpt-780').expect_partial()
+  checkpoint.restore(tf_path).expect_partial()
   model = checkpoint.model
   
   tf_proj, tf_hidden = model(imarray_tf,True)
@@ -186,6 +206,7 @@ def main(argv):
 
   print((np.abs(tf_hidden.numpy() - pt_hidden.detach().numpy()) > 1e-6).sum())
   print((np.abs(tf_proj.numpy() - pt_proj.detach().numpy()) > 1e-6).sum())
+  pb()
 
 
 

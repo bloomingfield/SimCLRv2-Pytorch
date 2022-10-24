@@ -144,9 +144,11 @@ def main():
             for j in range(len(model.net[i+1].blocks)):
                 use_key_conv(model.net[i+1].blocks[j].net.conv1, layer_conv_key[j_i])
                 use_key_conv(model.net[i+1].blocks[j].net.conv2, layer_conv_key[j_i+1])
+                use_key_conv(model.net[i+1].blocks[j].net.conv3, layer_conv_key[j_i+2])
                 use_key_bn(model.net[i+1].blocks[j].net.bn1.bn, layer_conv_key_bn[j_i])
                 use_key_bn(model.net[i+1].blocks[j].net.bn2.bn, layer_conv_key_bn[j_i+1])
-                j_i+=2
+                use_key_bn(model.net[i+1].blocks[j].net.bn3.bn, layer_conv_key_bn[j_i+2])
+                j_i+=3
     
     # ===========================================================
     sd = {}
