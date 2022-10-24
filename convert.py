@@ -6,13 +6,20 @@ import torch.nn as nn
 import tensorflow as tf
 from tensorflow.python.training import checkpoint_utils as cp
 
-# python convert.py  ../simclr/tf2/cifar10_models/firsttry_real/ckpt-780
+# python convert.py  --tf_path ../simclr/tf2/cifar10_models/firsttry_real/ckpt-780
+# python convert.py  --tf_path ../simclr/tf2/cifar10_models/firsttry_real50/ckpt-1 --depth 50 --width 1 --sk_ratio 0.0 --channels_in 2048 --num_layers 2 --out_dim 64
 from resnet import get_resnet, get_head
 from pdb import set_trace as pb
 import re
 
 parser = argparse.ArgumentParser(description='SimCLR converter')
-parser.add_argument('tf_path', type=str, help='path of the input tensorflow file (ex: model.ckpt-250228)')
+parser.add_argument('--tf_path', type=str, help='path of the input tensorflow file (ex: model.ckpt-250228)')
+parser.add_argument('--depth', type=int, default=18)
+parser.add_argument('--width', type=int, default=1)
+parser.add_argument('--sk_ratio', type=float, default=0.0)
+parser.add_argument('--channels_in', type=int, default=512)
+parser.add_argument('--num_layers', type=int, default=2)
+parser.add_argument('--out_dim', type=int, default=64)
 args = parser.parse_args()
 
 def main():
@@ -50,13 +57,13 @@ def main():
     bn_keys.sort()
 
     # depth, width, sk_ratio = name_to_params(args.tf_path)
-    depth = 18
-    width = 1
-    sk_ratio = 0
+    depth = args.depth#18
+    width = args.width#1
+    sk_ratio = args.sk_ratio#0
 
-    channels_in=512
-    num_layers=2
-    out_dim=64
+    channels_in=args.channels_in#512
+    num_layers=args.num_layers#2
+    out_dim=args.out_dim#64
 
     model = get_resnet(depth, width, sk_ratio, cifar_stem=True)
     head = get_head(channels_in, num_layers, out_dim)
@@ -103,24 +110,43 @@ def main():
     key = 'model/resnet_model/initial_conv_relu_max_pool/2/bn'
     use_key_bn(model.net[0].bn1.bn, key)
 
-    for i in range(4):
-        layer_keys = [x for x in conv_keys if 'block_groups/'+str(i)+'/layers' in x]
-        layer_shortcut_key = [x for x in layer_keys if 'shortcut_layers' in x]
-        layer_conv_key = [x for x in layer_keys if 'conv2d_bn_layers' in x]
-        layer_keys_bn = [x for x in bn_keys if 'block_groups/'+str(i)+'/layers' in x]
-        layer_shortcut_key_bn = [x for x in layer_keys_bn if 'shortcut_layers' in x]
-        layer_conv_key_bn = [x for x in layer_keys_bn if 'conv2d_bn_layers' in x]
+    if args.depth == 18:
+        for i in range(4):
+            layer_keys = [x for x in conv_keys if 'block_groups/'+str(i)+'/layers' in x]
+            layer_shortcut_key = [x for x in layer_keys if 'shortcut_layers' in x]
+            layer_conv_key = [x for x in layer_keys if 'conv2d_bn_layers' in x]
+            layer_keys_bn = [x for x in bn_keys if 'block_groups/'+str(i)+'/layers' in x]
+            layer_shortcut_key_bn = [x for x in layer_keys_bn if 'shortcut_layers' in x]
+            layer_conv_key_bn = [x for x in layer_keys_bn if 'conv2d_bn_layers' in x]
+            pb()
 
-        use_key_conv(model.net[i+1].blocks[0].projection.shortcut.conv, layer_shortcut_key[0])
-        use_key_bn(model.net[i+1].blocks[0].projection.bn.bn, layer_shortcut_key_bn[0])
-        j_i = 0
-        for j in range(len(model.net[i+1].blocks)):
-            use_key_conv(model.net[i+1].blocks[j].net.conv1, layer_conv_key[j_i])
-            use_key_conv(model.net[i+1].blocks[j].net.conv2, layer_conv_key[j_i+1])
-            use_key_bn(model.net[i+1].blocks[j].net.bn1.bn, layer_conv_key_bn[j_i])
-            use_key_bn(model.net[i+1].blocks[j].net.bn2.bn, layer_conv_key_bn[j_i+1])
-            j_i+=2
-          
+            use_key_conv(model.net[i+1].blocks[0].projection.shortcut.conv, layer_shortcut_key[0])
+            use_key_bn(model.net[i+1].blocks[0].projection.bn.bn, layer_shortcut_key_bn[0])
+            j_i = 0
+            for j in range(len(model.net[i+1].blocks)):
+                use_key_conv(model.net[i+1].blocks[j].net.conv1, layer_conv_key[j_i])
+                use_key_conv(model.net[i+1].blocks[j].net.conv2, layer_conv_key[j_i+1])
+                use_key_bn(model.net[i+1].blocks[j].net.bn1.bn, layer_conv_key_bn[j_i])
+                use_key_bn(model.net[i+1].blocks[j].net.bn2.bn, layer_conv_key_bn[j_i+1])
+                j_i+=2
+    elif args.depth == 50:
+        for i in range(4):
+            layer_keys = [x for x in conv_keys if 'block_groups/'+str(i)+'/layers' in x]
+            layer_shortcut_key = [x for x in layer_keys if 'projection_layers' in x]
+            layer_conv_key = [x for x in layer_keys if 'conv_relu_dropblock_layers' in x]
+            layer_keys_bn = [x for x in bn_keys if 'block_groups/'+str(i)+'/layers' in x]
+            layer_shortcut_key_bn = [x for x in layer_keys_bn if 'projection_layers' in x]
+            layer_conv_key_bn = [x for x in layer_keys_bn if 'conv_relu_dropblock_layers' in x]
+
+            use_key_conv(model.net[i+1].blocks[0].projection.shortcut.conv, layer_shortcut_key[0])
+            use_key_bn(model.net[i+1].blocks[0].projection.bn.bn, layer_shortcut_key_bn[0])
+            j_i = 0
+            for j in range(len(model.net[i+1].blocks)):
+                use_key_conv(model.net[i+1].blocks[j].net.conv1, layer_conv_key[j_i])
+                use_key_conv(model.net[i+1].blocks[j].net.conv2, layer_conv_key[j_i+1])
+                use_key_bn(model.net[i+1].blocks[j].net.bn1.bn, layer_conv_key_bn[j_i])
+                use_key_bn(model.net[i+1].blocks[j].net.bn2.bn, layer_conv_key_bn[j_i+1])
+                j_i+=2
     
     # ===========================================================
     sd = {}
