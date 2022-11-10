@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 *.pth
+
+val
+r50_1x_sk0
