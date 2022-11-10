@@ -12,6 +12,13 @@ from resnet import get_resnet, name_to_params
 
 from pdb import set_trace as pb
 
+
+# python verify2.py r50_1x_sk0.pth
+# ACC: 70.968
+
+# python verify2.py r50_1x_sk0_ema.pth
+# ACC: 70.952
+
 class ImagenetValidationDataset(Dataset):
     def __init__(self, val_path):
         super().__init__()
